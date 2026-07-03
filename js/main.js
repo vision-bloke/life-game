@@ -1,0 +1,195 @@
+// ═══ 2EZi LIFE — main orchestrator ═══
+import { state, save, tierIndex } from './state.js';
+import { GOOD_ACTIONS, BAD_ACTIONS, SAVER_ACTIONS } from './data.js';
+import { applyTransaction, startAmbient, on } from './economy.js';
+import { initScene, loadAvatar, setTier, applyOwned, celebrate, setMood, react, playEmote } from './scene3d.js';
+import {
+  renderHeader, addFeedItem, renderQuests, renderShop, renderRanks,
+  coachSay, toast, showChest, confetti, initTabs,
+} from './ui.js';
+
+const $ = (id) => document.getElementById(id);
+
+/* ── build action buttons ── */
+function actionButton(a, kind) {
+  const btn = document.createElement('button');
+  btn.className = `action-btn ${kind}`;
+  const fx = kind === 'bad'
+    ? `${a.score}`
+    : `+${a.score} · +${a.coin} 🪙`;
+  const amt = a.amount !== undefined
+    ? (a.amount >= 0 ? `+$${a.amount}` : `-$${Math.abs(a.amount)}`)
+    : (a.sub || '');
+  btn.innerHTML = `
+    <span class="a-icon">${a.icon}</span>
+    <span class="a-body">${a.label}<div class="a-amt">${amt}</div></span>
+    <span class="a-fx">${fx}</span>`;
+  return btn;
+}
+
+function buildActions() {
+  for (const a of GOOD_ACTIONS) {
+    const btn = actionButton(a, 'good');
+    btn.onclick = () => applyTransaction({
+      ...a, kind: 'good',
+      questId: a.id === 'save50' ? 'save' : undefined,
+    });
+    $('goodActions').appendChild(btn);
+  }
+  for (const a of BAD_ACTIONS) {
+    const btn = actionButton(a, 'bad');
+    btn.onclick = () => applyTransaction({ ...a, kind: 'bad' });
+    $('badActions').appendChild(btn);
+  }
+  for (const a of SAVER_ACTIONS) {
+    const btn = actionButton(a, 'saver');
+    if (state.saversUsed.includes(a.id)) btn.classList.add('used');
+    btn.onclick = () => {
+      state.saversUsed.push(a.id);
+      save();
+      btn.classList.add('used');
+      applyTransaction({ ...a, amount: 0, kind: 'good', questId: 'saver1' });
+      toast(`💡 ${a.label} — ${a.sub}. Nice one!`, 'gold');
+    };
+    $('saverActions').appendChild(btn);
+  }
+}
+
+/* ── game events → UI + world ── */
+function wireEvents() {
+  on('tx', (tx) => {
+    addFeedItem(tx);
+    renderHeader();
+    renderQuests();
+    renderShop(onBuy);
+    renderRanks();
+    if (tx.source !== 'ambient') {
+      react(tx.kind, tx.score || 0);
+      if (tx.kind === 'good' && (tx.score || 0) >= 15) confetti(60);
+    }
+    if (tx.kind === 'bad' && (tx.score || 0) <= -15) {
+      toast(`${tx.icon} ${tx.label}: <b style="color:#ff5d6c">${tx.score} LifeScore</b>`, 'red');
+    }
+  });
+
+  on('tierUp', (tier) => {
+    setTier(tier, state.owned);
+    playEmote('Dance', 3200);
+    confetti(220);
+    coachSay('tierUp');
+    toast('🏆 <b>WORLD UPGRADED</b> — your real-life spending just levelled up your character\'s life!', 'gold');
+  });
+
+  on('tierDown', (tier) => {
+    setTier(tier, state.owned);
+    coachSay('tierDown');
+    toast('📉 Your world just downgraded…', 'red');
+  });
+
+  on('levelUp', (lvl) => {
+    confetti(120);
+    toast(`⭐ <b>LEVEL ${lvl}</b> — keep stacking those smart spends!`, 'gold');
+  });
+
+  on('chest', (reward) => {
+    showChest(reward);
+    confetti(100);
+    renderHeader();
+  });
+
+  on('coach', (topic) => coachSay(topic));
+
+  on('quests', () => { renderQuests(); renderHeader(); });
+
+  on('questClaimed', (def) => {
+    confetti(90);
+    toast(`✅ Quest complete: <b>${def.label}</b> +${def.coin} 🪙 +${def.entries} 🌴`, 'gold');
+  });
+
+  on('coin', () => renderHeader());
+
+  on('bought', () => {});   // handled via onBuy for scene updates
+}
+
+function onBuy(item) {
+  applyOwned(state.owned);
+  renderHeader();
+  renderShop(onBuy);
+  react('good', 15);   // dance for a new toy
+  confetti(80);
+  toast(`${item.icon} <b>${item.name}</b> is yours!`, 'gold');
+  if (item.irl) toast('☕ Voucher sent to your 2EZi wallet — redeem at any Bite café.', 'gold');
+}
+
+/* ── character-select onboarding ── */
+function initOnboarding() {
+  if (state.onboarded) {
+    $('onboarding').classList.add('hidden');
+    return;
+  }
+  let chosenUrl = state.avatarUrl;
+  let chosenColor = state.avatarColor;
+
+  document.querySelectorAll('.char-card').forEach((card) => {
+    card.onclick = () => {
+      document.querySelectorAll('.char-card').forEach((c) => c.classList.remove('selected'));
+      card.classList.add('selected');
+      chosenUrl = card.dataset.char;
+      // colour only applies to EZI (the robot has a tintable primary material)
+      $('swatchRow').style.visibility = chosenUrl.includes('robot') ? 'visible' : 'hidden';
+    };
+  });
+  document.querySelectorAll('.swatch').forEach((sw) => {
+    sw.onclick = () => {
+      document.querySelectorAll('.swatch').forEach((s) => s.classList.remove('selected'));
+      sw.classList.add('selected');
+      chosenColor = sw.dataset.color;
+    };
+  });
+
+  $('btnStartLife').onclick = async () => {
+    const changed = chosenUrl !== state.avatarUrl || chosenColor !== state.avatarColor;
+    state.avatarUrl = chosenUrl;
+    state.avatarColor = chosenColor;
+    state.onboarded = true;
+    save();
+    $('onboarding').classList.add('hidden');
+    if (changed) await loadAvatar(state.avatarUrl, state.avatarColor);
+    toast('✨ <b>Character ready.</b> Now make them proud.', 'gold');
+    coachSay('welcome');
+  };
+}
+
+/* ── demo reset ── */
+$('btnReset').onclick = () => {
+  if (confirm('Reset the demo and start a fresh life?')) {
+    localStorage.clear();
+    location.reload();
+  }
+};
+
+/* ── boot ── */
+async function boot() {
+  initTabs();
+  buildActions();
+  wireEvents();
+  renderHeader();
+  renderQuests();
+  renderShop(onBuy);
+  renderRanks();
+
+  initScene($('scene'));
+  setTier(tierIndex(), state.owned);
+
+  initOnboarding();
+
+  await loadAvatar(state.avatarUrl, state.avatarColor);
+  if (state.onboarded) coachSay('welcome');
+
+  startAmbient();
+
+  // leaderboard drift — fake players move a little so ranks feel alive
+  setInterval(renderRanks, 20000);
+}
+
+boot();

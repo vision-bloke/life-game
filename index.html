@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>2EZi LIFE — Your money. Your character. Your life.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- ══════════ ONBOARDING ══════════ -->
+<div id="onboarding" class="overlay">
+  <div class="onboard-card">
+    <div class="onboard-intro" id="onboardIntro">
+      <div class="logo-big">2EZi <span>LIFE</span></div>
+      <h1>Your money builds your character.</h1>
+      <p>Spend smart in real life and watch your character rise.<br>
+         Waste it… and watch their world fall apart.</p>
+
+      <div class="char-select">
+        <button class="char-card selected" data-char="assets/robot.glb">
+          <span class="char-emoji">🤖</span>
+          <span class="char-name">EZI</span>
+          <span class="char-desc">Expressive — dances, sulks &amp; celebrates your every spend</span>
+        </button>
+        <button class="char-card" data-char="assets/soldier.glb">
+          <span class="char-emoji">🧍</span>
+          <span class="char-name">AXEL</span>
+          <span class="char-desc">Realistic human — full avatar creator coming soon</span>
+        </button>
+      </div>
+
+      <div class="swatch-row" id="swatchRow">
+        <span class="swatch-label">Colour</span>
+        <button class="swatch selected" data-color="#00d4b8" style="background:#00d4b8"></button>
+        <button class="swatch" data-color="#ff5d6c" style="background:#ff5d6c"></button>
+        <button class="swatch" data-color="#ffc94d" style="background:#ffc94d"></button>
+        <button class="swatch" data-color="#4f6fc9" style="background:#4f6fc9"></button>
+        <button class="swatch" data-color="#3ddc84" style="background:#3ddc84"></button>
+        <button class="swatch" data-color="#c95fd4" style="background:#c95fd4"></button>
+      </div>
+
+      <button class="btn btn-primary btn-xl" id="btnStartLife">Start my life</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ HEADER ══════════ -->
+<header id="topbar">
+  <div class="logo">2EZi <span>LIFE</span></div>
+  <div class="stat-chips">
+    <div class="chip chip-score" id="chipScore" title="LifeScore — powered by your real transactions">
+      <div class="chip-label">LIFESCORE</div>
+      <div class="chip-value"><span id="scoreVal">650</span><span class="chip-max">/1500</span></div>
+      <div class="chip-sub" id="tierName">Getting There</div>
+    </div>
+    <div class="chip" title="2EZi Coin — earned by smart spending">
+      <div class="chip-label">🪙 COIN</div>
+      <div class="chip-value" id="coinVal">250</div>
+    </div>
+    <div class="chip" title="Weekly Bali Draw entries">
+      <div class="chip-label">🌴 BALI ENTRIES</div>
+      <div class="chip-value" id="entriesVal">0</div>
+    </div>
+    <div class="chip" title="Smart-spend streak">
+      <div class="chip-label">🔥 STREAK</div>
+      <div class="chip-value" id="streakVal">0</div>
+    </div>
+    <div class="chip" title="Level">
+      <div class="chip-label">⭐ LEVEL</div>
+      <div class="chip-value" id="levelVal">1</div>
+    </div>
+    <button id="btnReset" title="Reset demo — start a fresh life">↺</button>
+  </div>
+  <div class="tier-progress"><div class="tier-progress-fill" id="tierFill"></div></div>
+</header>
+
+<!-- ══════════ MAIN GRID ══════════ -->
+<main id="layout">
+
+  <!-- LEFT: real-life actions -->
+  <aside id="leftPanel">
+    <h2>💳 Real Life</h2>
+    <p class="panel-hint">Simulated bank feed — every tap is a real-world transaction your bank would report.</p>
+
+    <h3 class="good-h">Smart moves</h3>
+    <div id="goodActions" class="action-list"></div>
+
+    <h3 class="bad-h">Temptations</h3>
+    <div id="badActions" class="action-list"></div>
+
+    <h3 class="saver-h">💡 Money savers <span class="one-time">one-time wins</span></h3>
+    <div id="saverActions" class="action-list"></div>
+
+    <div class="qoin-meter">
+      <div class="qoin-meter-head">
+        <span>QOIN ECONOMY</span>
+        <span id="qoinPct">0%</span>
+      </div>
+      <div class="qoin-bar"><div class="qoin-fill" id="qoinFill"></div></div>
+      <div class="qoin-caption">Share of your spending in coin vs cash</div>
+    </div>
+  </aside>
+
+  <!-- CENTER: 3D world -->
+  <section id="world">
+    <canvas id="scene"></canvas>
+    <div id="worldBadge"><span id="worldTier">Getting There</span></div>
+    <div id="moodBadge">😐</div>
+    <div id="coachBubble" class="hidden">
+      <div class="coach-avatar">🤖</div>
+      <div class="coach-text" id="coachText"></div>
+    </div>
+    <canvas id="confetti"></canvas>
+  </section>
+
+  <!-- RIGHT: feed / quests / shop / ranks -->
+  <aside id="rightPanel">
+    <nav class="tabs">
+      <button class="tab active" data-tab="feed">Feed</button>
+      <button class="tab" data-tab="quests">Quests</button>
+      <button class="tab" data-tab="shop">Shop</button>
+      <button class="tab" data-tab="ranks">Ranks</button>
+    </nav>
+    <div class="tab-page active" id="page-feed"><div id="feedList"></div></div>
+    <div class="tab-page" id="page-quests">
+      <p class="panel-hint">Daily quests. Rewards include 🌴 entries into the weekly Bali draw.</p>
+      <div id="questList"></div>
+    </div>
+    <div class="tab-page" id="page-shop">
+      <p class="panel-hint">Spend coin on your world — or IRL at 100s of Bite cafés.</p>
+      <div id="shopList"></div>
+    </div>
+    <div class="tab-page" id="page-ranks">
+      <p class="panel-hint">This week's LifeScore leaders</p>
+      <div id="rankList"></div>
+    </div>
+  </aside>
+</main>
+
+<!-- ══════════ CHEST MODAL ══════════ -->
+<div id="chestModal" class="overlay hidden">
+  <div class="chest-card">
+    <div class="chest-emoji" id="chestEmoji">🎁</div>
+    <h2 id="chestTitle">Bonus drop!</h2>
+    <p id="chestReward"></p>
+    <button class="btn btn-primary" id="btnChestClaim">Claim</button>
+  </div>
+</div>
+
+<!-- ══════════ TOASTS ══════════ -->
+<div id="toasts"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
