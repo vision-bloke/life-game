@@ -244,14 +244,25 @@ function runConfetti() {
   requestAnimationFrame(runConfetti);
 }
 
-/* ── tabs ── */
+/* ── tabs (the Spend tab swaps in the actions panel on mobile) ── */
 export function initTabs() {
+  const left = $('leftPanel');
+  const right = document.getElementById('rightPanel');
   document.querySelectorAll('.tab').forEach((btn) => {
     btn.onclick = () => {
       document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
-      document.querySelectorAll('.tab-page').forEach((p) => p.classList.remove('active'));
       btn.classList.add('active');
+      if (btn.dataset.tab === 'spend') {
+        left.classList.add('mobile-show');
+        right.classList.add('mobile-hide');
+        return;
+      }
+      left.classList.remove('mobile-show');
+      right.classList.remove('mobile-hide');
+      document.querySelectorAll('.tab-page').forEach((p) => p.classList.remove('active'));
       document.getElementById(`page-${btn.dataset.tab}`).classList.add('active');
     };
   });
+  // phones open on Spend — the actions ARE the game
+  if (window.innerWidth <= 700) document.querySelector('.tab-spend')?.click();
 }

@@ -77,7 +77,7 @@ body {
 @media (max-width: 1100px) {
   #layout { grid-template-columns: 250px minmax(280px, 1fr) 280px; }
 }
-@media (max-width: 900px) {
+@media (max-width: 900px) and (min-width: 701px) {
   #layout {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 46vh minmax(0, 1fr);
@@ -88,6 +88,8 @@ body {
   .stat-chips { flex-wrap: wrap; }
   body { overflow-y: auto; }
 }
+
+/* (mobile styles live at the end of this file so they win the cascade) */
 #leftPanel, #rightPanel {
   background: var(--panel);
   overflow-y: auto;
@@ -182,6 +184,9 @@ h3 { font-size: 0.72rem; letter-spacing: 1.2px; text-transform: uppercase; margi
   cursor: pointer;
 }
 .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+.tab-spend { display: none; color: var(--gold); }
+.tab-spend.active { color: var(--gold); border-bottom-color: var(--gold); }
+@media (max-width: 700px) { .tab-spend { display: block; } }
 .tab-page { display: none; overflow-y: auto; flex: 1; padding: 10px 12px; }
 .tab-page.active { display: block; }
 
@@ -431,3 +436,66 @@ h3 { font-size: 0.72rem; letter-spacing: 1.2px; text-transform: uppercase; margi
 /* scrollbars */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ══════════ MOBILE (phones) — keep LAST so these rules win ══════════ */
+@media (max-width: 700px) {
+  html { font-size: 14px; }
+
+  /* header: compact, chips scroll sideways */
+  #topbar { flex-wrap: nowrap; gap: 10px; padding: 8px 10px 12px; }
+  .logo { font-size: 1rem; flex-shrink: 0; }
+  .stat-chips {
+    flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .stat-chips::-webkit-scrollbar { display: none; }
+  .chip { min-width: 78px; padding: 5px 10px; flex-shrink: 0; }
+  .chip-value { font-size: 1rem; }
+  #btnReset { flex-shrink: 0; width: 34px; }
+
+  /* stack: world on top, tab bar under it, one panel below.
+     The tab bar lives in #rightPanel, so in Spend mode we collapse
+     rightPanel to just the bar and show leftPanel beneath it. */
+  #layout { display: flex; flex-direction: column; }
+  #world { height: 34vh; flex: none; order: 1; }
+  #rightPanel { order: 2; flex: 1; min-height: 0; border-left: none; border-top: 1px solid var(--border); }
+  #rightPanel.mobile-hide { flex: none; }
+  #rightPanel.mobile-hide .tab-page { display: none; }
+  #leftPanel { display: none; order: 3; border-right: none; }
+  #leftPanel.mobile-show { display: block; flex: 1; min-height: 0; }
+  .tab { font-size: 0.72rem; padding: 12px 0; }
+
+  /* bigger touch targets */
+  .action-btn { padding: 12px 11px; font-size: 0.86rem; }
+  .shop-buy, .quest-claim { padding: 10px 14px; }
+
+  /* world overlays */
+  #worldBadge { top: 8px; left: 8px; padding: 4px 12px; font-size: 0.68rem; }
+  #moodBadge { top: 8px; right: 8px; width: 38px; height: 38px; font-size: 1.2rem; }
+  #coachBubble { bottom: 8px; max-width: calc(100% - 16px); padding: 9px 12px; }
+  .coach-text { font-size: 0.74rem; }
+  #btnLifeUpdate { top: 48px; padding: 8px 16px; font-size: 0.72rem; white-space: nowrap; }
+  #escapedBadge { font-size: 0.66rem; padding: 5px 12px; white-space: nowrap; }
+
+  /* onboarding: vertical, thumb-sized */
+  .onboard-card { width: 100%; padding: 0 14px; }
+  .logo-big { font-size: 1.7rem; margin-bottom: 10px; }
+  .onboard-card h1 { font-size: 1.3rem; }
+  .onboard-card p { font-size: 0.85rem; margin-bottom: 18px; }
+  .char-select { flex-direction: column; align-items: stretch; gap: 8px; margin-bottom: 16px; }
+  .char-card { width: 100%; flex-direction: row; text-align: left; padding: 12px 14px; gap: 12px; align-items: center; }
+  .char-card .char-emoji { font-size: 1.8rem; }
+  .char-card .char-desc { text-align: left; }
+  .path-select { gap: 8px; }
+  .path-card { width: calc(50% - 4px); }
+  .btn-xl { width: 100%; padding: 15px; }
+
+  /* modals */
+  .chest-card { padding: 26px 22px; width: 92%; }
+  .update-card { padding: 22px 18px; }
+  .avaturn-card { width: 100vw; height: 100dvh; border-radius: 0; border: none; display: flex; flex-direction: column; }
+  #avaturn-sdk-container { flex: 1; height: auto; }
+
+  #toasts { top: auto; bottom: 12px; right: 10px; left: 10px; }
+  .toast { font-size: 0.76rem; }
+}
