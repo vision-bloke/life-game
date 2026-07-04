@@ -352,6 +352,8 @@ export function loadAvatar(url, color) {
         if (!height) {
           const bounds = new THREE.Box3().setFromObject(avatar);
           height = bounds.max.y - bounds.min.y;
+          // morph targets can wildly inflate bounds — assume human size if implausible
+          if (height < 1.2 || height > 2.6) height = 1.8;
         }
         if (height > 0.1) avatar.scale.setScalar(1.7 / height);
         if (url.includes('soldier')) avatar.rotation.y = Math.PI;

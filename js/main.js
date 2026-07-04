@@ -167,6 +167,34 @@ function onBuy(item) {
   if (item.irl) toast('☕ Voucher sent to your 2EZi wallet — redeem at any Bite café.', 'gold');
 }
 
+/* ── Avaturn selfie → 3D avatar ──
+   Free integration: project subdomain from developer.avaturn.me.
+   'demo' works for testing — swap for the 2EZi project subdomain when created. */
+const AVATURN_SUBDOMAIN = 'demo';
+let avaturnSdk = null;
+
+async function openAvaturn(onAvatar) {
+  $('avaturnOverlay').classList.remove('hidden');
+  try {
+    const { AvaturnSDK } = await import('https://cdn.jsdelivr.net/npm/@avaturn/sdk/dist/index.js');
+    avaturnSdk = new AvaturnSDK();
+    await avaturnSdk.init($('avaturn-sdk-container'), { url: `https://${AVATURN_SUBDOMAIN}.avaturn.dev` });
+    avaturnSdk.on('export', (data) => {
+      closeAvaturn();
+      onAvatar(data.url);
+    });
+  } catch (err) {
+    closeAvaturn();
+    toast('📸 Selfie creator unavailable right now — pick EZI or AXEL for today.', 'red');
+  }
+}
+function closeAvaturn() {
+  $('avaturnOverlay').classList.add('hidden');
+  try { avaturnSdk?.destroy(); } catch {}
+  avaturnSdk = null;
+  $('avaturn-sdk-container').innerHTML = '';
+}
+
 /* ── character-select onboarding ── */
 function initOnboarding() {
   if (state.onboarded) {
@@ -185,7 +213,7 @@ function initOnboarding() {
     };
   });
 
-  document.querySelectorAll('.char-card:not(.disabled)').forEach((card) => {
+  document.querySelectorAll('.char-card[data-char]').forEach((card) => {
     card.onclick = () => {
       document.querySelectorAll('.char-card').forEach((c) => c.classList.remove('selected'));
       card.classList.add('selected');
@@ -194,6 +222,17 @@ function initOnboarding() {
       $('swatchRow').style.visibility = chosenUrl.includes('robot') ? 'visible' : 'hidden';
     };
   });
+
+  $('btnAvaturn').onclick = () => {
+    openAvaturn((url) => {
+      document.querySelectorAll('.char-card').forEach((c) => c.classList.remove('selected'));
+      $('btnAvaturn').classList.add('selected');
+      chosenUrl = url;
+      $('swatchRow').style.visibility = 'hidden';
+      toast('📸 <b>Looking good!</b> Hit Start my life.', 'gold');
+    });
+  };
+  $('btnAvaturnClose').onclick = closeAvaturn;
   document.querySelectorAll('.swatch').forEach((sw) => {
     sw.onclick = () => {
       document.querySelectorAll('.swatch').forEach((s) => s.classList.remove('selected'));
@@ -204,7 +243,8 @@ function initOnboarding() {
 
   $('btnStartLife').onclick = async () => {
     const changed = chosenUrl !== state.avatarUrl || chosenColor !== state.avatarColor;
-    state.avatarUrl = chosenUrl;
+    // data: URLs are multi-MB — load them this session but don't blow the localStorage quota
+    if (!chosenUrl.startsWith('data:')) state.avatarUrl = chosenUrl;
     state.avatarColor = chosenColor;
     state.path = chosenPath;
     state.playerName = $('playerName').value.trim();
@@ -214,7 +254,7 @@ function initOnboarding() {
     state.onboarded = true;
     save();
     $('onboarding').classList.add('hidden');
-    if (changed) await loadAvatar(state.avatarUrl, state.avatarColor);
+    if (changed) await loadAvatar(chosenUrl, state.avatarColor);
     toast('✨ <b>Character ready.</b> Now make them proud.', 'gold');
     coachSay('welcome');
   };

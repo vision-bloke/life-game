@@ -414,6 +414,20 @@ h3 { font-size: 0.72rem; letter-spacing: 1.2px; text-transform: uppercase; margi
 .path-card b { font-size: 0.8rem; }
 .path-card small { font-size: 0.6rem; color: var(--muted); }
 
+/* ── avaturn selfie creator ── */
+.avaturn-card {
+  width: min(960px, 94vw);
+  background: var(--panel);
+  border: 1px solid var(--teal);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: 0 0 60px #00d4b833;
+}
+.avaturn-head { display: flex; justify-content: space-between; align-items: center; font-weight: 900; margin-bottom: 10px; padding: 0 4px; }
+.avaturn-head .btn { margin: 0; padding: 6px 14px; }
+#avaturn-sdk-container { height: min(74vh, 680px); border-radius: 10px; overflow: hidden; background: #fff; }
+#avaturn-sdk-container iframe { width: 100%; height: 100%; border: none; }
+
 /* scrollbars */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }

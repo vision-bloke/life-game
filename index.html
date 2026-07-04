@@ -40,10 +40,10 @@
           <span class="char-name">AXEL</span>
           <span class="char-desc">Realistic human — reacts with body language</span>
         </button>
-        <button class="char-card disabled" disabled>
+        <button class="char-card" id="btnAvaturn">
           <span class="char-emoji">📸</span>
           <span class="char-name">YOU</span>
-          <span class="char-desc">Selfie → 3D cartoon of yourself — coming soon</span>
+          <span class="char-desc">Selfie → a 3D avatar of yourself</span>
         </button>
       </div>
 
@@ -186,6 +186,17 @@
     </div>
   </aside>
 </main>
+
+<!-- ══════════ AVATURN SELFIE CREATOR ══════════ -->
+<div id="avaturnOverlay" class="overlay hidden">
+  <div class="avaturn-card">
+    <div class="avaturn-head">
+      <span>📸 Create yourself</span>
+      <button class="btn btn-ghost" id="btnAvaturnClose">✕ Close</button>
+    </div>
+    <div id="avaturn-sdk-container"></div>
+  </div>
+</div>
 
 <!-- ══════════ LIFE UPDATE MODAL ══════════ -->
 <div id="updateModal" class="overlay hidden">
