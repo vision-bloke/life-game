@@ -1,10 +1,11 @@
 // ═══ 2EZi LIFE — main orchestrator ═══
 import { state, save, tierIndex } from './state.js';
 import { GOOD_ACTIONS, BAD_ACTIONS, SAVER_ACTIONS } from './data.js';
-import { applyTransaction, startAmbient, on } from './economy.js';
+import { applyTransaction, startAmbient, startCycles, checkEscape, on } from './economy.js';
 import { initScene, loadAvatar, setTier, applyOwned, celebrate, setMood, react, playEmote } from './scene3d.js';
 import {
   renderHeader, addFeedItem, renderQuests, renderShop, renderRanks,
+  renderAssets, renderBuyt, showLifeUpdate,
   coachSay, toast, showChest, confetti, initTabs,
 } from './ui.js';
 
@@ -62,6 +63,8 @@ function wireEvents() {
     renderHeader();
     renderQuests();
     renderShop(onBuy);
+    renderAssets();
+    renderBuyt();
     renderRanks();
     if (tx.source !== 'ambient') {
       react(tx.kind, tx.score || 0);
@@ -109,6 +112,49 @@ function wireEvents() {
   on('coin', () => renderHeader());
 
   on('bought', () => {});   // handled via onBuy for scene updates
+
+  /* ── rat race events ── */
+  on('assetBought', (asset) => {
+    renderAssets();
+    renderHeader();
+    react('good', 15);      // buying assets deserves a dance
+    confetti(90);
+    toast(`${asset.icon} <b>${asset.name}</b> acquired — +${asset.passive} 🪙 every payweek, forever.`, 'gold');
+    addFeedItem({ icon: asset.icon, label: `Bought asset: ${asset.name}`, amount: 0, score: 0, kind: 'good', coinEarned: 0 });
+  });
+
+  on('cycle', ({ salary, passive, expenses, net }) => {
+    renderHeader();
+    renderAssets();
+    addFeedItem({
+      icon: '💼',
+      label: `Payweek: salary +${salary}, assets +${passive}, expenses −${expenses}`,
+      amount: 0, score: 0,
+      kind: net >= 0 ? 'good' : 'bad',
+      coinEarned: Math.max(0, net),
+    });
+  });
+
+  on('escaped', () => {
+    renderHeader();
+    playEmote('Dance', 5000);
+    confetti(300);
+    coachSay('escaped');
+    toast('🏆 <b>OUT OF THE RAT RACE!</b> Passive income now covers your life. +10 Bali entries!', 'gold');
+  });
+
+  on('lifeUpdateReady', () => {
+    $('btnLifeUpdate').classList.remove('hidden');
+    coachSay('lifeUpdate');
+  });
+
+  on('buytRedeemed', (r) => {
+    renderBuyt();
+    renderHeader();
+    react('good', 15);
+    confetti(80);
+    toast(`${r.icon} <b>${r.name}</b> redeemed! Voucher sent to your 2EZi wallet — pick it up on buyt.com.au.`, 'gold');
+  });
 }
 
 function onBuy(item) {
@@ -129,8 +175,17 @@ function initOnboarding() {
   }
   let chosenUrl = state.avatarUrl;
   let chosenColor = state.avatarColor;
+  let chosenPath = state.path;
 
-  document.querySelectorAll('.char-card').forEach((card) => {
+  document.querySelectorAll('.path-card').forEach((card) => {
+    card.onclick = () => {
+      document.querySelectorAll('.path-card').forEach((c) => c.classList.remove('selected'));
+      card.classList.add('selected');
+      chosenPath = card.dataset.path;
+    };
+  });
+
+  document.querySelectorAll('.char-card:not(.disabled)').forEach((card) => {
     card.onclick = () => {
       document.querySelectorAll('.char-card').forEach((c) => c.classList.remove('selected'));
       card.classList.add('selected');
@@ -151,6 +206,11 @@ function initOnboarding() {
     const changed = chosenUrl !== state.avatarUrl || chosenColor !== state.avatarColor;
     state.avatarUrl = chosenUrl;
     state.avatarColor = chosenColor;
+    state.path = chosenPath;
+    state.playerName = $('playerName').value.trim();
+    // life path sets your starting money
+    const path = (await import('./data.js')).LIFE_PATHS.find((p) => p.id === chosenPath);
+    if (path) state.coin = path.startCoin;
     state.onboarded = true;
     save();
     $('onboarding').classList.add('hidden');
@@ -176,7 +236,17 @@ async function boot() {
   renderHeader();
   renderQuests();
   renderShop(onBuy);
+  renderAssets();
+  renderBuyt();
   renderRanks();
+
+  $('btnLifeUpdate').onclick = () => {
+    state.updateReady = false;
+    save();
+    $('btnLifeUpdate').classList.add('hidden');
+    showLifeUpdate();
+  };
+  if (state.updateReady) $('btnLifeUpdate').classList.remove('hidden');
 
   initScene($('scene'));
   setTier(tierIndex(), state.owned);
@@ -187,6 +257,9 @@ async function boot() {
   if (state.onboarded) coachSay('welcome');
 
   startAmbient();
+  startCycles();
+  checkEscape();   // saves loaded already free get their badge immediately
+  setTimeout(() => { if (state.onboarded && state.assets.length === 0) coachSay('ratrace'); }, 25000);
 
   // leaderboard drift — fake players move a little so ranks feel alive
   setInterval(renderRanks, 20000);

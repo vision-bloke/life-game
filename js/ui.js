@@ -1,7 +1,7 @@
 // ═══ 2EZi LIFE — UI layer ═══
-import { state, tierInfo, tierProgress, level } from './state.js';
-import { QUESTS, SHOP, RANKS, COACH } from './data.js';
-import { claimQuest, questState, buy, qoinRatio } from './economy.js';
+import { state, tierInfo, tierProgress, level, lifePath, passiveIncome, livingExpenses, freedomRatio } from './state.js';
+import { QUESTS, SHOP, RANKS, COACH, ASSETS, BUYT_REWARDS } from './data.js';
+import { claimQuest, questState, buy, qoinRatio, buyAsset, redeemBuyt } from './economy.js';
 
 const $ = (id) => document.getElementById(id);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -19,7 +19,83 @@ export function renderHeader() {
   $('tierFill').style.width = `${tierProgress() * 100}%`;
   $('qoinPct').textContent = `${Math.round(qoinRatio() * 100)}%`;
   $('qoinFill').style.width = `${qoinRatio() * 100}%`;
+  renderCashflow();
 }
+
+/* ── freedom / cashflow panel ── */
+function renderCashflow() {
+  const passive = passiveIncome();
+  const expenses = livingExpenses();
+  const salary = lifePath().salary;
+  const ratio = freedomRatio();
+  $('freedomPct').textContent = `${Math.min(999, Math.round(ratio * 100))}%`;
+  $('freedomFill').style.width = `${Math.min(100, ratio * 100)}%`;
+  $('cfSalary').textContent = `+${salary}`;
+  $('cfPassive').textContent = `+${passive}`;
+  $('cfExpenses').textContent = `−${expenses}`;
+  const net = salary + passive - expenses;
+  $('cfNet').textContent = `${net >= 0 ? '+' : ''}${net} 🪙`;
+  $('freedomMeter').classList.toggle('free', state.escaped);
+  $('escapedBadge').classList.toggle('hidden', !state.escaped);
+}
+
+/* ── assets tab ── */
+export function renderAssets() {
+  const list = $('assetList');
+  list.innerHTML = '';
+  for (const asset of ASSETS) {
+    const count = state.assets.filter((id) => id === asset.id).length;
+    const div = document.createElement('div');
+    div.className = `asset-item ${count ? 'owned' : ''}`;
+    div.innerHTML = `
+      <div class="s-icon">${asset.icon}</div>
+      <div class="s-body">
+        <div class="s-name">${asset.name} ${count ? `<span class="a-count">×${count}</span>` : ''}</div>
+        <div class="s-desc">${asset.desc}</div>
+        <div class="a-passive">+${asset.passive} 🪙 / payweek${count ? ` (earning +${asset.passive * count})` : ''}</div>
+      </div>
+      <button class="shop-buy" ${state.coin < asset.cost ? 'disabled' : ''}>${asset.cost} 🪙</button>`;
+    div.querySelector('.shop-buy').onclick = () => buyAsset(asset);
+    list.appendChild(div);
+  }
+}
+
+/* ── Buyt real rewards ── */
+export function renderBuyt() {
+  const list = $('buytList');
+  list.innerHTML = '';
+  for (const r of BUYT_REWARDS) {
+    const done = state.redeemed.includes(r.id);
+    const div = document.createElement('div');
+    div.className = `shop-item ${done ? 'owned' : ''}`;
+    div.innerHTML = `
+      <div class="s-icon">${r.icon}</div>
+      <div class="s-body">
+        <div class="s-name">${r.name}</div>
+        <div class="s-aud">Real item — $${r.aud.toFixed(2)} AUD on buyt.com.au</div>
+      </div>
+      <button class="shop-buy" ${done || state.coin < r.cost ? 'disabled' : ''}>${done ? 'REDEEMED' : `${r.cost} 🪙`}</button>`;
+    if (!done) div.querySelector('.shop-buy').onclick = () => redeemBuyt(r);
+    list.appendChild(div);
+  }
+}
+
+/* ── life update modal ── */
+export function showLifeUpdate() {
+  const ratio = freedomRatio();
+  $('updateTitle').textContent = state.playerName ? `${state.playerName}, your bank data just landed` : 'Your bank data just landed';
+  $('updScore').textContent = state.score;
+  $('updStreak').textContent = state.streak;
+  $('updPassive').textContent = `+${passiveIncome()} 🪙`;
+  $('updFreedom').textContent = `${Math.min(999, Math.round(ratio * 100))}%`;
+  $('updateVerdict').innerHTML =
+    state.escaped || ratio >= 1 ? '🏆 <b>You are OUT of the rat race.</b> Everything from here is stacking wealth.'
+    : ratio >= 0.6 ? `You're <b>${Math.round(ratio * 100)}%</b> of the way out of the rat race. A couple more assets and your bills pay themselves.`
+    : state.score >= 700 ? 'Spending looks sharp — now put that coin to work in the <b>Assets</b> tab.'
+    : 'Rough patch in the data. Small moves: pay one bill on time, bank $50, skip one punt.';
+  $('updateModal').classList.remove('hidden');
+}
+$('btnUpdateClose')?.addEventListener('click', () => $('updateModal').classList.add('hidden'));
 function setVal(id, val) {
   const el = $(id);
   if (String(el.textContent) !== String(val)) {

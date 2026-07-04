@@ -8,6 +8,8 @@ export const DEFAULT_AVATAR = 'assets/robot.glb';
 const fresh = () => ({
   avatarUrl: DEFAULT_AVATAR,
   avatarColor: '#00d4b8',
+  playerName: '',
+  path: 'office',      // life path id → salary/expenses
   score: 650,
   coin: 250,
   entries: 0,
@@ -17,8 +19,13 @@ const fresh = () => ({
   cashSpent: 0,
   coinSpent: 0,
   owned: [],
+  assets: [],          // owned asset ids (repeats allowed — buy multiples)
+  redeemed: [],        // Buyt reward ids
+  escaped: false,      // out of the rat race
   saversUsed: [],
   quests: {},          // id -> { progress, claimed }
+  cycleCount: 0,
+  updateReady: false,  // a Life Update is waiting to be opened
   onboarded: false,
 });
 
@@ -67,3 +74,28 @@ export function tierProgress(score = state.score) {
 }
 
 export const level = () => Math.floor(state.xp / 100) + 1;
+
+/* ── rat race cashflow (CASHFLOW-style) ── */
+import { LIFE_PATHS, ASSETS } from './data.js';
+
+export function lifePath() {
+  return LIFE_PATHS.find((p) => p.id === state.path) || LIFE_PATHS[2];
+}
+
+export function passiveIncome() {
+  return state.assets.reduce((sum, id) => {
+    const a = ASSETS.find((x) => x.id === id);
+    return sum + (a ? a.passive : 0);
+  }, 0);
+}
+
+// lifestyle creep: higher tiers cost more to run — just like real life
+export function livingExpenses() {
+  const tierBump = [0, 4, 10, 18, 30][tierIndex()];
+  return lifePath().expenses + tierBump;
+}
+
+// 0..1+ progress toward passive income covering expenses
+export function freedomRatio() {
+  return passiveIncome() / Math.max(1, livingExpenses());
+}

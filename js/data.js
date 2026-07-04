@@ -57,6 +57,36 @@ export const SHOP = [
   { id: 'bite',    icon: '☕', name: 'Bite café voucher', desc: 'Real coffee, real world — IRL spend', cost: 80, irl: true },
 ];
 
+// ═══ RAT RACE layer (CASHFLOW-style) ═══
+// Every cycle ("payweek", 60s real time): coin += salary + passive − expenses.
+// ESCAPE THE RAT RACE when passive income ≥ living expenses.
+
+export const LIFE_PATHS = [
+  { id: 'student', icon: '🎓', name: 'Student',  desc: 'Broke but hungry. Low costs, big upside.',  salary: 22, expenses: 16, startCoin: 200 },
+  { id: 'tradie',  icon: '👷', name: 'Tradie',   desc: 'Good money, tools to pay off.',             salary: 38, expenses: 28, startCoin: 300 },
+  { id: 'office',  icon: '💼', name: 'Office',   desc: 'Steady 9-to-5. Comfortable trap.',          salary: 32, expenses: 24, startCoin: 250 },
+  { id: 'hustler', icon: '🚀', name: 'Hustler',  desc: 'Irregular income, lives lean.',             salary: 26, expenses: 18, startCoin: 350 },
+];
+
+export const ASSETS = [
+  { id: 'shares',  icon: '📊', name: 'Blue-chip shares',   desc: 'Steady dividends',            cost: 300,  passive: 6 },
+  { id: 'etf',     icon: '🌐', name: 'Index ETF parcel',   desc: 'The boring millionaire move', cost: 600,  passive: 14 },
+  { id: 'hustle',  icon: '🛠️', name: 'Side hustle',        desc: 'Weekend income machine',      cost: 900,  passive: 24 },
+  { id: 'rental',  icon: '🏠', name: 'Rental unit',        desc: 'Tenant pays you every week',  cost: 2000, passive: 58 },
+  { id: 'duplex',  icon: '🏘️', name: 'Duplex',             desc: 'Two doors, double rent',      cost: 3800, passive: 120 },
+  { id: 'cafe',    icon: '☕', name: 'Café franchise',     desc: 'Your own Buyt-listed café',   cost: 6000, passive: 210 },
+];
+
+// Real products live on buyt.com.au — the coin-to-real-world bridge
+export const BUYT_REWARDS = [
+  { id: 'b-lunch',  icon: '🥪', name: 'QC Bakery Lunch Deal',            cost: 150,  aud: 7.5 },
+  { id: 'b-shed',   icon: '🧵', name: 'She Shed Embroidery $10 Voucher', cost: 200,  aud: 10 },
+  { id: 'b-wine',   icon: '🍷', name: 'Gisborne Food & Wine $10 Voucher', cost: 200, aud: 10 },
+  { id: 'b-curry',  icon: '🍛', name: 'Curry @ Corio $30 Voucher',       cost: 550,  aud: 30 },
+  { id: 'b-lamp',   icon: '🦉', name: 'Owl Salt Lamp',                   cost: 1100, aud: 67 },
+  { id: 'b-piano',  icon: '🎹', name: 'Intro to Piano — Level 1',        cost: 1400, aud: 86 },
+];
+
 export const QUESTS = [
   { id: 'smart3',  label: 'Make 3 smart spends',      target: 3, coin: 30, entries: 1 },
   { id: 'save',    label: 'Bank $50 into savings',    target: 1, coin: 40, entries: 2 },
@@ -100,5 +130,18 @@ export const COACH = {
   ],
   welcome: [
     "G'day! I'm your money coach. Every real-life transaction moves your <b>LifeScore</b>. Smart spends earn coin — waste drains your world. Try a smart move on the left.",
+  ],
+  ratrace: [
+    "See that <b>FREEDOM</b> meter? Buy assets in the Assets tab — when your passive income beats your living expenses, you've <b>escaped the rat race</b>.",
+    "Your job pays the bills. Your <b>assets</b> buy your freedom. Stack them.",
+  ],
+  firstAsset: [
+    "🎉 Your first asset! It now pays you <b>every payweek, forever</b>. This is the game rich people play.",
+  ],
+  escaped: [
+    "🏆 <b>YOU'VE ESCAPED THE RAT RACE.</b> Your assets now pay for your life — your salary is optional. This is financial freedom.",
+  ],
+  lifeUpdate: [
+    "📊 Your <b>Life Update</b> is in — that's your real bank data talking. Check the damage (or the glory).",
   ],
 };

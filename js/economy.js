@@ -3,8 +3,8 @@
 // When Tailfin is wired in, its webhook events land here as {label, amount, score}
 // and the whole game reacts with zero other changes.
 
-import { state, save, clampScore, tierIndex, level } from './state.js';
-import { AMBIENT, QUESTS } from './data.js';
+import { state, save, clampScore, tierIndex, level, lifePath, passiveIncome, livingExpenses, freedomRatio } from './state.js';
+import { AMBIENT, QUESTS, ASSETS, BUYT_REWARDS } from './data.js';
 
 const listeners = {};
 export const on = (ev, fn) => (listeners[ev] = listeners[ev] || []).push(fn);
@@ -127,6 +127,61 @@ export function buy(item) {
   save();
   emit('bought', item);
   return true;
+}
+
+/* ── rat race: assets, payweek cycle, escape ── */
+export function buyAsset(asset) {
+  if (state.coin < asset.cost) return false;
+  const firstEver = state.assets.length === 0;
+  state.coin -= asset.cost;
+  state.coinSpent += asset.cost;
+  state.assets.push(asset.id);
+  save();
+  emit('assetBought', asset);
+  if (firstEver) emit('coach', 'firstAsset');
+  checkEscape();
+  return true;
+}
+
+export function redeemBuyt(reward) {
+  if (state.coin < reward.cost || state.redeemed.includes(reward.id)) return false;
+  state.coin -= reward.cost;
+  state.coinSpent += reward.cost;
+  state.redeemed.push(reward.id);
+  save();
+  emit('buytRedeemed', reward);
+  return true;
+}
+
+export function checkEscape() {
+  if (!state.escaped && freedomRatio() >= 1) {
+    state.escaped = true;
+    state.entries += 10;      // escape bonus: 10 Bali entries
+    save();
+    emit('escaped');
+  }
+}
+
+// One payweek: salary + passive − expenses. This is the CASHFLOW heartbeat.
+export function runCycle() {
+  const salary = lifePath().salary;
+  const passive = passiveIncome();
+  const expenses = livingExpenses();
+  const net = salary + passive - expenses;
+  state.coin = Math.max(0, state.coin + net);
+  state.cycleCount += 1;
+  // every 3rd payweek a Life Update lands (mirrors the 3×/week Tailfin feed)
+  if (state.cycleCount % 3 === 0) {
+    state.updateReady = true;
+    emit('lifeUpdateReady');
+  }
+  save();
+  emit('cycle', { salary, passive, expenses, net });
+  checkEscape();
+}
+
+export function startCycles() {
+  setInterval(runCycle, 60000);
 }
 
 // share of spend flowing through coin instead of cash — the Qoin transition metric

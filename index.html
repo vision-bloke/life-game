@@ -27,6 +27,8 @@
       <p>Spend smart in real life and watch your character rise.<br>
          Waste it… and watch their world fall apart.</p>
 
+      <input type="text" id="playerName" class="name-input" maxlength="16" placeholder="Your character's name" autocomplete="off" />
+
       <div class="char-select">
         <button class="char-card selected" data-char="assets/robot.glb">
           <span class="char-emoji">🤖</span>
@@ -36,8 +38,21 @@
         <button class="char-card" data-char="assets/soldier.glb">
           <span class="char-emoji">🧍</span>
           <span class="char-name">AXEL</span>
-          <span class="char-desc">Realistic human — full avatar creator coming soon</span>
+          <span class="char-desc">Realistic human — reacts with body language</span>
         </button>
+        <button class="char-card disabled" disabled>
+          <span class="char-emoji">📸</span>
+          <span class="char-name">YOU</span>
+          <span class="char-desc">Selfie → 3D cartoon of yourself — coming soon</span>
+        </button>
+      </div>
+
+      <div class="path-label">Where are you starting from?</div>
+      <div class="path-select" id="pathSelect">
+        <button class="path-card" data-path="student"><span>🎓</span><b>Student</b><small>Broke but hungry</small></button>
+        <button class="path-card selected" data-path="office"><span>💼</span><b>Office</b><small>Steady 9-to-5</small></button>
+        <button class="path-card" data-path="tradie"><span>👷</span><b>Tradie</b><small>Good money, big tools</small></button>
+        <button class="path-card" data-path="hustler"><span>🚀</span><b>Hustler</b><small>Lean &amp; hungry</small></button>
       </div>
 
       <div class="swatch-row" id="swatchRow">
@@ -102,6 +117,21 @@
     <h3 class="saver-h">💡 Money savers <span class="one-time">one-time wins</span></h3>
     <div id="saverActions" class="action-list"></div>
 
+    <div class="freedom-meter" id="freedomMeter">
+      <div class="freedom-head">
+        <span>🔓 FREEDOM</span>
+        <span id="freedomPct">0%</span>
+      </div>
+      <div class="qoin-bar"><div class="freedom-fill" id="freedomFill"></div></div>
+      <div class="cashflow-rows">
+        <div><span>💼 Salary</span><b id="cfSalary">+32</b></div>
+        <div><span>🏠 Passive income</span><b id="cfPassive" class="cf-pos">+0</b></div>
+        <div><span>💸 Living expenses</span><b id="cfExpenses" class="cf-neg">−24</b></div>
+        <div class="cf-net"><span>Payweek net</span><b id="cfNet">+8</b></div>
+      </div>
+      <div class="qoin-caption">Passive income ≥ expenses = <b>escape the rat race</b></div>
+    </div>
+
     <div class="qoin-meter">
       <div class="qoin-meter-head">
         <span>QOIN ECONOMY</span>
@@ -121,6 +151,8 @@
       <div class="coach-avatar">🤖</div>
       <div class="coach-text" id="coachText"></div>
     </div>
+    <button id="btnLifeUpdate" class="hidden">📊 LIFE UPDATE READY</button>
+    <div id="escapedBadge" class="hidden">🏆 OUT OF THE RAT RACE</div>
     <canvas id="confetti"></canvas>
   </section>
 
@@ -128,17 +160,24 @@
   <aside id="rightPanel">
     <nav class="tabs">
       <button class="tab active" data-tab="feed">Feed</button>
+      <button class="tab" data-tab="assets">Assets</button>
       <button class="tab" data-tab="quests">Quests</button>
       <button class="tab" data-tab="shop">Shop</button>
       <button class="tab" data-tab="ranks">Ranks</button>
     </nav>
     <div class="tab-page active" id="page-feed"><div id="feedList"></div></div>
+    <div class="tab-page" id="page-assets">
+      <p class="panel-hint">Assets pay you <b>every payweek, forever</b>. When passive income beats expenses — you're free.</p>
+      <div id="assetList"></div>
+    </div>
     <div class="tab-page" id="page-quests">
       <p class="panel-hint">Daily quests. Rewards include 🌴 entries into the weekly Bali draw.</p>
       <div id="questList"></div>
     </div>
     <div class="tab-page" id="page-shop">
-      <p class="panel-hint">Spend coin on your world — or IRL at 100s of Bite cafés.</p>
+      <h3 class="shop-h">🌏 Real rewards — buyt.com.au</h3>
+      <div id="buytList"></div>
+      <h3 class="shop-h">🎮 Your world</h3>
       <div id="shopList"></div>
     </div>
     <div class="tab-page" id="page-ranks">
@@ -147,6 +186,23 @@
     </div>
   </aside>
 </main>
+
+<!-- ══════════ LIFE UPDATE MODAL ══════════ -->
+<div id="updateModal" class="overlay hidden">
+  <div class="update-card">
+    <div class="update-tag">📊 LIFE UPDATE</div>
+    <h2 id="updateTitle">Your bank data just landed</h2>
+    <div class="update-grid">
+      <div class="update-stat"><span>LifeScore</span><b id="updScore">650</b></div>
+      <div class="update-stat"><span>Streak</span><b id="updStreak">0</b></div>
+      <div class="update-stat"><span>Passive / week</span><b id="updPassive">+0</b></div>
+      <div class="update-stat"><span>Freedom</span><b id="updFreedom">0%</b></div>
+    </div>
+    <p id="updateVerdict" class="update-verdict"></p>
+    <button class="btn btn-primary" id="btnUpdateClose">Let's go</button>
+    <div class="update-note">In the live app this is your real Tailfin bank feed — updated 3× a week.</div>
+  </div>
+</div>
 
 <!-- ══════════ CHEST MODAL ══════════ -->
 <div id="chestModal" class="overlay hidden">
