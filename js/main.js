@@ -169,8 +169,8 @@ function onBuy(item) {
 
 /* ── Avaturn selfie → 3D avatar ──
    Free integration: project subdomain from developer.avaturn.me.
-   'demo' works for testing — swap for the 2EZi project subdomain when created. */
-const AVATURN_SUBDOMAIN = 'demo';
+   Tim's project: lifegame.avaturn.dev */
+const AVATURN_SUBDOMAIN = 'lifegame';
 let avaturnSdk = null;
 
 async function openAvaturn(onAvatar) {
